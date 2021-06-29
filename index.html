@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Games</title>
+    
+        <h4>Login</h4>
+        <input type="text" name="email" id="email" placeholder="user@Email.com"><br><br>
+        <input type="text" name="pass" id="pass" placeholder="************"><br><br>
+        <button type="button" onclick="login();">Entrar</button>
+        <hr>
+        <h4>Lista de games</h4>
+        <ul id="games"></ul>
+        <hr>
+        <h4>Novo game</h4>
+        <input type="text" name="title" id="title" placeholder="Título">
+        <button type="button" onclick="createGame()">Criar</button>
+        <hr>
+        <h4>Editar game</h4>
+        <input type="text" name="idEdit" id="idEdit" placeholder="ID" readonly><br><br>
+        <input type="text" name="titleEdit" id="titleEdit" placeholder="Título"><br><br>
+        <button type="button" onclick="updateGame()">Editar</button>
+
+</head>
+<body>
+    
+</body>
+
+
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+<script>
+
+    function login(){
+        var emailField = document.getElementById("email");
+        var passField = document.getElementById("pass");
+        var email = emailField.value;
+        var password = passField.value;
+
+        axios.post("http://localhost:9090/auth", {
+            email, password
+        }).then(res => {
+            var token = res.data.token;
+            localStorage.setItem("token", token);
+            axiosConfig.headers.Authorization = "Bearer " + localStorage.getItem("token"); //recalcula o token
+            alert("Logado");
+        }).catch(err => {
+            alert("Login inválido!");
+        })
+    }
+
+
+    //cabeçalho de autenticação
+    var axiosConfig = {
+        headers: {
+            Authorization: "Bearer " + localStorage.getItem("token")
+        }
+    }
+    
+    function createGame(){
+        var titleInput = document.getElementById("title");
+        var game = {
+            title: titleInput.value
+        }
+
+        axios.post("http://localhost:9090/game",game, axiosConfig).then(response => {
+            if(response.status == 200){
+                alert("Game cadastrado!")
+            }
+        }).catch(err => {
+            console.log(err);
+        });
+    }
+
+    function deleteGame(listItem){
+        var id = listItem.getAttribute("data-id");
+        axios.delete("http://localhost:9090/game/"+id, axiosConfig).then(response => {
+            alert("Game deletado!")
+        }).catch(err => {
+            console.log(err);
+        });
+    }
+
+    function loadForm(listItem){
+        var id = listItem.getAttribute("data-id");
+        var title = listItem.getAttribute("data-title");
+        
+        document.getElementById("idEdit").value = id;
+        document.getElementById("titleEdit").value = title;
+    }
+
+    function updateGame(){
+
+        var idInput = document.getElementById("idEdit")
+        var titleInput = document.getElementById("titleEdit");
+
+        var game = {
+            title: titleInput.value,
+        }
+
+        var id = idInput.value;
+
+        axios.put("http://localhost:9090/game/"+id,game, axiosConfig).then(response => {
+            if(response.status == 200){
+                alert("Game atualizado!!")
+            }
+        }).catch(err => {
+            console.log(err);
+        });
+
+    }
+
+
+    axios.get("http://localhost:9090/games", axiosConfig).then(response => {
+        var games = response.data;
+        var list = document.getElementById("games");
+
+        games.forEach(game => {
+            var item = document.createElement("li");
+
+            item.setAttribute("data-id",game.id);
+            item.setAttribute("data-title",game.title);
+
+            item.innerHTML = game.id + " - " + game.title;
+
+            var deleteBtn = document.createElement("button");
+            deleteBtn.innerHTML = "Deletar";
+            deleteBtn.addEventListener("click",function(){
+                deleteGame(item)
+            })
+
+            var editBtn = document.createElement("button");
+            editBtn.innerHTML = "Editar";
+            editBtn.addEventListener("click",function(){
+                loadForm(item);
+            });
+    
+            item.appendChild(deleteBtn);
+            item.appendChild(editBtn);
+            
+            list.appendChild(item);
+        });
+
+    }).catch(error => {
+        console.log(error);
+    });
+
+</script>
+</html>
