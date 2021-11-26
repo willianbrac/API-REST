@@ -2,7 +2,7 @@ const express = require("express");
 const app = express();
 const bodyParser = require("body-parser");
 const jwt = require('jsonwebtoken');
-const JWTSecret = "7Aqqc&W3C!DAdnD2d@pGPX2Lw$mCEWUOqz"   //chave global
+const JWTSecret = "SecretKey"   //chave global
 app.use(bodyParser.urlencoded({extended: false}));
 app.use(bodyParser.json());
 
